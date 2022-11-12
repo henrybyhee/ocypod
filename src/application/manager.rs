@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::default::Default;
 
 use log::{debug, info, warn};
-use redis::{aio::ConnectionLike, AsyncCommands};
+use redis::{aio::ConnectionLike, AsyncCommands, Direction};
 
 use super::{job::RedisJob, queue::RedisQueue};
 use crate::models::{job, queue, DateTime, JobStats, OcyError, OcyResult, QueueInfo, ServerInfo};
@@ -697,10 +697,13 @@ impl RedisManager {
         let queue = self.queue_from_string(queue_name)?
             .ensure_exists(conn)
             .await?;
-        let job = match conn
-            .rpoplpush::<_, Option<u64>>(queue.jobs_key(), &self.limbo_key)
-            .await?
-        {
+
+        let job = match conn.lmove::<_, Option<u64>>(
+            queue.jobs_key(),
+            &self.limbo_key,
+            Direction::Right,
+            Direction::Left
+        ).await? {
             Some(job_id) => self.job_from_id(job_id),
             None => return Ok(None),
         };
