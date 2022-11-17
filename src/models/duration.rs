@@ -11,7 +11,7 @@ use serde::ser::{Serialize, Serializer};
 ///
 /// Serialised to/from JSON as a human readable time (e.g. "1m", "1day", "1h 22m 58s").
 /// Serialised to/from Redis as u64 seconds.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Duration(pub time::Duration);
 
 impl Duration {
